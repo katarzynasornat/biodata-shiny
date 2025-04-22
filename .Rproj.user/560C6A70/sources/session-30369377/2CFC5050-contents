@@ -1,0 +1,177 @@
+library(shiny)
+library(leaflet)
+library(dplyr)
+
+# Simulated data
+set.seed(123)
+data <- data.frame(
+  id = 1:100,
+  category = sample(c("A", "B", "C"), 100, replace = TRUE),
+  status = sample(c("Active", "Inactive"), 100, replace = TRUE),
+  lat = runif(100, 37.70, 37.80),
+  lng = runif(100, -122.50, -122.38)
+)
+
+ui <- fluidPage(
+  # Tailwind CSS
+  tags$head(
+    tags$link(
+      rel = "stylesheet", 
+      href = "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    ),
+    tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
+    tags$style(HTML("
+  .nav-btn {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1.25 rem;
+    color: #4B5563; /* Tailwind gray-700 */
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+  }
+
+  .nav-btn:hover {
+    color: #1D4ED8; /* Tailwind blue-700 */
+  }
+
+  .nav-btn.active {
+    color: #2563EB; /* Tailwind blue-600 */
+    font-weight: 600;
+  }
+
+  .divider {
+    border-left: 1px solid #d1d5db;
+    margin: 0 1rem;
+  }
+")
+               
+    ),
+    tags$script(HTML("
+  document.addEventListener('DOMContentLoaded', function() {
+    var infoBtn = document.getElementById('info_btn');
+    if (infoBtn) {
+      infoBtn.addEventListener('click', function() {
+        Shiny.setInputValue('info_btn', Math.random());
+      });
+    }
+  });
+"))
+    
+  ),
+  
+  # Navbar
+  div(class = "flex items-center justify-between bg-gray-100 p-4 shadow",
+      div(class = "text-3xl font-bold text-gray-800", "speX - species eXplorer"),
+      div(class = "flex space-x-10",
+          uiOutput("nav_buttons"),
+          tags$button(
+            id = "info_btn",
+            class = "text-gray-600 hover:text-blue-600 text-3xl focus:outline-none",
+            `aria-label` = "Info",
+            HTML('<i class="fa-solid fa-circle-info"></i>')
+          )
+      )
+  ),
+  
+  div(class = "p-6", uiOutput("main_ui")),
+  
+  # Footer
+  div(class = "border-t border-gray-300 mt-8 pt-4 px-6 flex justify-between text-gray-500 text-m",
+      span(HTML("Created by <strong>SorKa</strong> with ❤️")),
+      span("2025")
+  )
+)
+
+server <- function(input, output, session) {
+  tabs <- c("tab1", "tab2", "tab3", "tab4")
+  tab_labels <- c("Tab 1", "Tab 2", "Tab 3", "Tab 4")
+  current_tab <- reactiveVal("tab1")
+  
+  observeEvent(input$tab1, current_tab("tab1"))
+  observeEvent(input$tab2, current_tab("tab2"))
+  observeEvent(input$tab3, current_tab("tab3"))
+  observeEvent(input$tab4, current_tab("tab4"))
+  
+  observeEvent(input$info_btn, {
+    showModal(modalDialog(
+      title = HTML("<i class='fa-solid fa-circle-info text-blue-500'></i> How to Use This App"),
+      HTML("
+      <ul class='list-disc pl-5 space-y-2'>
+        <li>Use the tabs in the navbar to navigate between different views.</li>
+        <li>On <strong>Tab 1</strong>, select a column and a value to filter data points on the map.</li>
+        <li>Hover over map markers to see the ID of each item.</li>
+        <li>The map will update automatically based on your selection.</li>
+      </ul>
+    "),
+      easyClose = TRUE,
+      footer = modalButton("Close"),
+      size = "m"
+    ))
+  })
+  
+  # Render navbar buttons dynamically with style
+  output$nav_buttons <- renderUI({
+    lapply(seq_along(tabs), function(i) {
+      tab <- tabs[i]
+      label <- tab_labels[i]
+      active <- if (current_tab() == tab) "active" else ""
+      actionButton(
+        inputId = tab,
+        label = label,
+        class = paste("nav-btn", active)
+      )
+    })
+  })
+  
+  # Main UI
+  output$main_ui <- renderUI({
+    if (current_tab() == "tab1") {
+      fluidRow(
+        column(
+          width = 4,
+          div(class = "flex",
+              div(
+                selectInput("column_choice", "Column", choices = c("category", "status")),
+                class = "w-1/2"
+              ),
+              div(class = "divider"),
+              div(
+                uiOutput("value_choice"),
+                class = "w-1/2"
+              )
+          )
+        ),
+        column(
+          width = 8,
+          leafletOutput("map", height = 500)
+        )
+      )
+    } else {
+      h2(paste("This is", current_tab()))
+    }
+  })
+  
+  output$value_choice <- renderUI({
+    req(input$column_choice)
+    selectInput("value_choice", "Value", choices = unique(data[[input$column_choice]]))
+  })
+  
+  output$map <- renderLeaflet({
+    req(input$column_choice, input$value_choice)
+    filtered <- data %>% filter(.data[[input$column_choice]] == input$value_choice)
+    
+    leaflet(filtered) %>%
+      addTiles() %>%
+      addCircleMarkers(
+        lng = ~lng, lat = ~lat,
+        radius = 5,
+        color = "blue",
+        stroke = FALSE,
+        fillOpacity = 0.7,
+        label = ~paste("ID:", id)
+      )
+  })
+}
+
+shinyApp(ui, server)

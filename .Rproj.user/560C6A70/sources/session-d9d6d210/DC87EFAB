@@ -1,0 +1,27 @@
+{
+    "id": "DC87EFAB",
+    "path": "~/Documents/speX/modules/map_module.R",
+    "project_path": "modules/map_module.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1744958758177.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "119,0",
+        "scrollLine": "91"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1744976399,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1744976399653,
+    "read_only": false,
+    "read_only_alternatives": []
+}

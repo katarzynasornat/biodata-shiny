@@ -1,0 +1,24 @@
+# Ignore environment files
+.Renviron
+.env
+
+# Ignore R history and session files
+.Rhistory
+.RData
+
+# Ignore compiled files
+*.o
+*.so
+
+# Ignore data (optional if you don’t want large datasets committed)
+data/
+dropdownchart.R
+app1.R
+timeline_module.R
+data/multimedia.csv
+data/parquet_files/
+*.Rproj
+
+# Ignore Docker local files
+*.log
+*.tmp

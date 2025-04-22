@@ -1,0 +1,81 @@
+.nav-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1.25rem; /* Tailwind's text-xl */
+  color: #4B5563; /* gray-700 */
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.nav-btn:hover {
+  color: #1D4ED8; /* blue-700 */
+}
+
+.nav-btn.active {
+  color: #2563EB; /* blue-600 */
+  font-weight: 600;
+}
+
+.divider {
+  border-left: 1px solid #d1d5db;
+  margin: 0 1rem;
+}
+
+.footer {
+  font-family: system-ui, sans-serif;
+}
+
+.dark .nav-btn {
+  color: #D1D5DB;
+}
+
+.dark .nav-btn:hover {
+  color: #93C5FD;
+}
+
+.dark .nav-btn.active {
+  color: #3B82F6;
+}
+
+.dark .modal-content {
+  background-color: #374151 !important;
+  color: #F3F4F6 !important;
+}
+
+
+.chart-title-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151; /* Tailwind slate-700 */
+        margin-bottom: 1rem;
+      }
+
+.chart-title-container span {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+      }
+
+.inline-dropdown {
+        background: transparent;
+        border: none;
+        font-weight: 600;
+        color: #3b82f6; /* Tailwind blue-500 */
+        font-size: 1.25rem;
+        padding-left: 5px;
+        padding-right: 5px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        margin-left: 5px; /* Add space between title and dropdown */
+        height: 35px; /* Align the dropdown height with the title */
+      }
+
+.inline-dropdown:focus {
+        outline: none;
+        text-decoration: underline;
+      }

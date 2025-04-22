@@ -1,0 +1,25 @@
+# Azure storage account and container
+AZURE_STORAGE_ACCOUNT <- "shinyappdevdata"
+AZURE_CONTAINER <- "biodata"
+
+# SAS Tokens (loaded securely from environment variables — set these in .Renviron or Azure App Settings)
+AZURE_SAS_TOKEN_OCCURENCE <- Sys.getenv("SPEX_OCCURENCE_SAS_TOKEN")
+AZURE_SAS_TOKEN_MULTIMEDIA <- Sys.getenv("SPEX_MULTIMEDIA_SAS_TOKEN")
+AZURE_SAS_TOKEN_FULL_OCCURENCE <- Sys.getenv("PARQUET_SAS_URL")
+
+# === URLs for Parquet Files ===
+
+URL_OCCURRENCE_PARQUET <- glue::glue("https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net/{AZURE_CONTAINER}/occurence.parquet?{AZURE_SAS_TOKEN_OCCURENCE}")
+URL_MULTIMEDIA_PARQUET <- glue::glue("https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net/{AZURE_CONTAINER}/multimedia.parquet?{AZURE_SAS_TOKEN_MULTIMEDIA}")
+
+
+
+string2 <- "https://shinyappdevdata.blob.core.windows.net/biodata/occurence.parquet?sp=r&st=2025-04-21T21:47:31Z&se=2025-05-10T05:47:31Z&sv=2024-11-04&sr=b&sig=pV6SEvxR1yoB2gD06xDDF6%2B3yk1PEWGQGzh0qIGYn1A%3D"
+
+# Split strings into characters
+chars1 <- unlist(strsplit(URL_OCCURRENCE_PARQUET , NULL))
+chars2 <- unlist(strsplit(string2, NULL))
+
+# Find the positions where characters differ
+diff_positions <- which(chars1 != chars2)
+print(diff_positions) 

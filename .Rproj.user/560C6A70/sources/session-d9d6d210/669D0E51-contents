@@ -1,0 +1,44 @@
+.nav-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1.25rem; /* Tailwind's text-xl */
+  color: #4B5563; /* gray-700 */
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.nav-btn:hover {
+  color: #1D4ED8; /* blue-700 */
+}
+
+.nav-btn.active {
+  color: #2563EB; /* blue-600 */
+  font-weight: 600;
+}
+
+.divider {
+  border-left: 1px solid #d1d5db;
+  margin: 0 1rem;
+}
+
+.footer {
+  font-family: system-ui, sans-serif;
+}
+
+.dark .nav-btn {
+  color: #D1D5DB;
+}
+
+.dark .nav-btn:hover {
+  color: #93C5FD;
+}
+
+.dark .nav-btn.active {
+  color: #3B82F6;
+}
+
+.dark .modal-content {
+  background-color: #374151 !important;
+  color: #F3F4F6 !important;
+}

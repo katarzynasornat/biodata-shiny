@@ -1,0 +1,150 @@
+# options(shiny.autoreload = TRUE)
+# 
+# library(shiny)
+# library(leaflet)
+# library(dplyr)
+# library(data.table)
+# library(highcharter)
+
+# options(shiny.host = "0.0.0.0")
+# options(shiny.port = 8180)
+
+data <- fread("data/occurence_PL.csv")
+data$date <- as.Date(data$eventDate, format = "%Y-%m-%d")
+
+source("globals.R")
+source("modules/map_module.R")
+source("modules/filter_module.R")
+source("modules/timeline_module1.R")
+
+ui <- fluidPage(
+  # Tailwind CSS
+  tags$head(
+    tags$link(
+      rel = "stylesheet", 
+      href = "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    ),
+    tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
+    tags$link(rel = "stylesheet", href = "styles.css"),
+    tags$script(HTML("
+  document.addEventListener('DOMContentLoaded', function() {
+    var infoBtn = document.getElementById('info_btn');
+    if (infoBtn) {
+      infoBtn.addEventListener('click', function() {
+        Shiny.setInputValue('info_btn', Math.random());
+      });
+    }
+  });
+"))
+    
+  ),
+  
+  # Navbar
+  tags$div(class = "flex items-center justify-between bg-gray-100 p-4 shadow",
+      tags$div(class = "text-3xl font-bold text-gray-400", "speX - species eXplorer"),
+      tags$div(class = "flex items-center space-x-10",
+          tags$div(class = "flex space-x-20", uiOutput("nav_buttons")),  # Add spacing here
+          tags$button(
+            id = "info_btn",
+            class = "text-gray-600 hover:text-blue-600 text-3xl focus:outline-none",
+            `aria-label` = "Info",
+            HTML('<i class="fa-solid fa-circle-info"></i>')
+          )
+      )
+  )
+  ,
+  
+  tags$div(class = "p-6", uiOutput("main_ui")),
+  
+  # Footer
+  tags$div(class = "border-t border-gray-300 mt-8 pt-4 px-6 flex justify-between text-gray-500 text-m",
+      span(HTML("Created by <strong>SorKa</strong> with ❤️")),
+      span("2025")
+  )
+)
+
+server <- function(input, output, session) {
+  tabs <- c("tab1", "tab2", "tab3", "tab4")
+  tab_labels <- c("Species on the Map", "Tab 2", "Tab 3", "Tab 4")
+  current_tab <- reactiveVal("tab1")
+  
+  observeEvent(input$tab1, current_tab("tab1"))
+  observeEvent(input$tab2, current_tab("tab2"))
+  observeEvent(input$tab3, current_tab("tab3"))
+  observeEvent(input$tab4, current_tab("tab4"))
+  
+  observeEvent(input$info_btn, {
+    showModal(modalDialog(
+      title = HTML("<i class='fa-solid fa-circle-info text-blue-500'></i> How to Use This App"),
+      HTML("
+      <ul class='list-disc pl-5 space-y-2'>
+        <li>Use the tabs in the navbar to navigate between different views.</li>
+        <li>On <strong>Tab 1</strong>, select a column and a value to filter data points on the map.</li>
+        <li>Hover over map markers to see the ID of each item.</li>
+        <li>The map will update automatically based on your selection.</li>
+      </ul>
+    "),
+      easyClose = TRUE,
+      footer = modalButton("Close"),
+      size = "m"
+    ))
+  })
+  
+  # Render navbar buttons dynamically with style
+  output$nav_buttons <- renderUI({
+    lapply(seq_along(tabs), function(i) {
+      tab <- tabs[i]
+      label <- tab_labels[i]
+      active <- if (current_tab() == tab) "active" else ""
+      actionButton(
+        inputId = tab,
+        label = label,
+        class = paste("nav-btn", active)
+      )
+    })
+  })
+  
+  # Main UI
+  output$main_ui <- renderUI({
+    if (current_tab() == "tab1") {
+      tagList(
+        tags$div(class = "flex h-full",
+                 tags$div(class = "w-1/4 p-6",
+                          filter_ui("filter_mod"),
+                          DT::dataTableOutput("summary_table")
+                 ),
+                 map_ui("map_mod"),
+                 #timeline_ui("timeline_mod")
+        ),
+        tags$div(class="mt-10", timeline_ui("timeline_mod"))
+      )
+    } else {
+      h2(paste("This is", current_tab()))
+    }
+  })
+  
+  
+  
+  # Call the map server module
+  # Get filtered dataset from the module
+  filter_result <- filter_server("filter_mod", data)
+  filtered_data <- filter_result$data
+  selected_column <- filter_result$selected_column
+  
+  # Map gets filtered data
+  map_module_server("map_mod", filtered_data)
+  timeline_server("timeline_mod", filtered_data)
+  
+  # Summary table
+  output$summary_table <- DT::renderDataTable({
+    req(filtered_data)
+    summary_table <- filtered_data() %>%
+      group_by(.data[[selected_column()]]) %>%
+      summarise(Total = sum(individualCount))
+    
+    DT::datatable(summary_table, options = list(pageLength = 5, dom = 't'))
+  })
+  
+}
+
+shinyApp(ui, server)

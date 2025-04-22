@@ -1,0 +1,15 @@
+.git
+.gitignore
+*.Rproj
+*.md
+*.tar.gz
+.Rhistory
+.RData
+
+.Renviron
+
+dropdownchart.R
+app1.R
+timeline_module.R
+data/multimedia.csv
+data/parquet_files/
