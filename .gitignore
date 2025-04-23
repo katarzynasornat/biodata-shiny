@@ -22,3 +22,4 @@ data/parquet_files/
 # Ignore Docker local files
 *.log
 *.tmp
+.Rproj.user

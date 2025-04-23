@@ -3,7 +3,7 @@
     "path": "~/Documents/speX/globals.R",
     "project_path": "globals.R",
     "type": "r_source",
-    "hash": "0",
+    "hash": "3622411435",
     "contents": "",
     "dirty": false,
     "created": 1745321270362.0,
@@ -13,15 +13,15 @@
         "tempName": "Untitled1",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "9,20",
-        "scrollLine": "0"
+        "cursorPosition": "39,59",
+        "scrollLine": "14"
     },
     "folds": "",
-    "lastKnownWriteTime": 1745324521,
+    "lastKnownWriteTime": 1745360196,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1745324521767,
+    "last_content_update": 1745360196826,
     "read_only": false,
     "read_only_alternatives": []
 }

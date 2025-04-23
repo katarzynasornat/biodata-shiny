@@ -1,52 +1,51 @@
-# modules/filter_module.R
+# ---- filter_module.R ----
 
 filter_ui <- function(id) {
   ns <- NS(id)
+  
   tagList(
-    tags$div(
-      class = "bg-blue-50 rounded-lg shadow-lg p-4 space-y-6 border border-blue-200",
-      selectInput(ns("column_choice"), "Column", choices = c("scientificName", "vernacularName")),
-      uiOutput(ns("value_choice"))
-    )
+    selectInput(ns("column_choice"), "Choose Column:",
+                choices = c("", "scientificName", "vernacularName"), selected = "", selectize = TRUE),
+    
+    selectizeInput(ns("value_choice"), "Choose Value:",
+                   choices = NULL,
+                   selected = NULL,
+                   options = list(placeholder = 'Start typing...', maxOptions = 500))
   )
 }
 
-filter_server <- function(id, data) {
+filter_server <- function(id, data, unique_values_map) {
   moduleServer(id, function(input, output, session) {
-    ns <- session$ns
     
+    # Reactive for selected column
+    selected_column <- reactive({
+      req(input$column_choice)
+      input$column_choice
+    })
+    
+    # Dynamically update value choices when column changes
+    observeEvent(input$column_choice, {
+      req(input$column_choice)
+      updateSelectizeInput(
+        session,
+        inputId = "value_choice",
+        choices = unique_values_map[[input$column_choice]],
+        selected = "",
+        server = TRUE  # Efficient for large data
+      )
+    })
+    
+    # Reactive filtered data
     filtered_data <- reactive({
       req(input$column_choice, input$value_choice)
       data %>%
         filter(.data[[input$column_choice]] == input$value_choice)
     })
     
-    # Render empty selectizeInput using renderUI
-    output$value_choice <- renderUI({
-      selectizeInput(
-        ns("value_choice"),
-        "Value",
-        choices = NULL,
-        options = list(placeholder = "Select a column first")
-      )
-    })
-    
-    # Dynamically update selectizeInput with server-side option
-    observeEvent(input$column_choice, {
-      req(input$column_choice)
-      
-      updateSelectizeInput(
-        session = session,
-        inputId = "value_choice",
-        choices = unique(data[[input$column_choice]]),
-        server = TRUE
-      )
-    })
-    
-    # Also return input$column_choice for use in summaries, etc.
+    # Return both for downstream use
     return(list(
       data = filtered_data,
-      selected_column = reactive(input$column_choice)
+      selected_column = selected_column
     ))
   })
 }

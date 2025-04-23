@@ -40,6 +40,9 @@ filter_server <- function(id, data) {
       data %>% filter(.data[[input$column_choice]] == input$value_choice)
     })
     
-    return(filtered_data)
+    return(list(
+      data = filtered_data,
+      selected_column = reactive(input$column_choice)
+    ))
   })
 }

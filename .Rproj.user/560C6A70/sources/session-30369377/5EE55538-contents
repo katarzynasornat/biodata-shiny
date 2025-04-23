@@ -8,6 +8,7 @@ library(dplyr)
 library(shiny)
 library(leaflet)
 library(highcharter)
+library(shinyjs)
 
 # === Configuration ===
 
@@ -27,6 +28,17 @@ AZURE_SAS_TOKEN_MULTIMEDIA <- Sys.getenv("SPEX_MULTIMEDIA_SAS_TOKEN")
 
 URL_OCCURRENCE_PARQUET <- glue::glue("https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net/{AZURE_CONTAINER}/occurence.parquet?{AZURE_SAS_TOKEN_OCCURENCE}")
 URL_MULTIMEDIA_PARQUET <- glue::glue("https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net/{AZURE_CONTAINER}/multimedia.parquet?{AZURE_SAS_TOKEN_MULTIMEDIA}")
+
+
+# === Static data loading ===
+data <- fread("data/occurence_PL.csv")
+data$date <- as.Date(data$eventDate, format = "%Y-%m-%d")
+
+# === Precompute unique values per column one time when the app starts ===
+unique_values_map <- list(
+  scientificName = c("", sort(unique(data$scientificName))),
+  vernacularName = c("", sort(unique(data$vernacularName)))
+)
 
 # === DuckDB Connection ===
 
