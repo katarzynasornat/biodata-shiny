@@ -14,8 +14,8 @@ ui <- fluidPage(
         if (!obs.error) obs.start(); else console.error(obs.error);
         if (!species.error) species.start(); else console.error(species.error);
         if (!last.error) last.start(); else console.error(last.error);
-      });
-    "))
+      });"
+    ))
   ),
   
   tags$div(class = "max-w-4xl mx-auto mt-10 px-6",

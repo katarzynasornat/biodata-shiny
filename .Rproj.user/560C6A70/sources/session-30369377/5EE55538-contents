@@ -9,6 +9,7 @@ library(shiny)
 library(leaflet)
 library(highcharter)
 library(shinyjs)
+library(glue)
 
 # === Configuration ===
 
@@ -39,6 +40,11 @@ unique_values_map <- list(
   scientificName = c("", sort(unique(data$scientificName))),
   vernacularName = c("", sort(unique(data$vernacularName)))
 )
+
+
+TOTAL_OBS = nrow(data)
+UNIQUE_SCIENTIFICNAME = length(unique(data$scientificName))
+DAYS_TO_LAST_OBS = as.numeric(Sys.Date() - max(data$date))
 
 # === DuckDB Connection ===
 

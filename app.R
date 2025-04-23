@@ -24,6 +24,19 @@ ui <- fluidPage(
     ),
     tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
     tags$link(rel = "stylesheet", href = "styles.css"),
+    tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.8/countUp.umd.js"),
+    tags$script(HTML("
+  Shiny.addCustomMessageHandler('startCounters', function(message) {
+    const opts = { duration: 1, separator: ',' };
+    const obs = new countUp.CountUp(message.ns + 'count-observations', message.total, opts);
+    const species = new countUp.CountUp(message.ns + 'count-species', message.unique, opts);
+    const last = new countUp.CountUp(message.ns + 'count-lastdate', message.last, opts);
+    
+    if (!obs.error) obs.start(); else console.error(obs.error);
+    if (!species.error) species.start(); else console.error(species.error);
+    if (!last.error) last.start(); else console.error(last.error);
+  });
+")),
     tags$script(HTML("
   document.addEventListener('DOMContentLoaded', function() {
     var infoBtn = document.getElementById('info_btn');
@@ -54,7 +67,7 @@ ui <- fluidPage(
   tags$div(class = "p-6", uiOutput("main_ui")),
   
   # Footer
-  tags$div(class = "border-t border-gray-300 mt-8 pt-4 px-6 flex justify-between text-gray-500 text-m",
+  tags$div(class = "border-t border-gray-300 mb-2 pt-4 px-6 flex justify-between text-gray-500 text-m",
            span(HTML("Created by <strong>SorKa</strong> with ❤️")),
            span("2025")
   )
@@ -129,7 +142,7 @@ server <- function(input, output, session) {
                
                # Main panel changes depending on selection
                tags$div(class = "flex-1 p-6",
-                        uiOutput("dynamic_main_ui")  # ← renders stats or map/chart
+                        uiOutput("dynamic_main_ui") 
                )
       ),
       
@@ -137,32 +150,13 @@ server <- function(input, output, session) {
     )
   })
   
+
   
   output$dynamic_main_ui <- renderUI({
     if (!user_selection$selected) {
-      tagList(
-        tags$div(class = "bg-white rounded-lg shadow p-6 max-w-3xl mx-auto mt-10 space-y-4 text-center",
-                 tags$h2(class = "text-2xl font-bold text-gray-800", "Welcome to speX"),
-                 tags$p(class = "text-gray-600", "Explore species data with maps and charts."),
-                 tags$div(class = "grid grid-cols-3 gap-4 mt-4",
-                          tags$div(class = "bg-blue-100 text-blue-800 p-4 rounded-lg shadow",
-                                   tags$div(class = "text-xl font-bold", format(nrow(data), big.mark = ",")),
-                                   tags$div("Total Observations")
-                          ),
-                          tags$div(class = "bg-green-100 text-green-800 p-4 rounded-lg shadow",
-                                   tags$div(class = "text-xl font-bold", length(unique(data$scientificName))),
-                                   tags$div("Unique Species")
-                          ),
-                          tags$div(class = "bg-purple-100 text-purple-800 p-4 rounded-lg shadow",
-                                   tags$div(class = "text-xl font-bold", format(max(data$eventDate), "%Y-%m-%d")),
-                                   tags$div("Last Observed")
-                          )
-                 ),
-                 tags$div(class = "mt-6",
-                          tags$p(class = "text-gray-500 italic",
-                                 "Choose a column and value on the left to get started.")
-                 )
-        )
+      tags$div(class = "max-w-4xl mx-auto mt-10 px-6",
+               tags$h1(class = "text-4xl font-bold text-center mb-6 text-gray-800", "speX Stats"),
+               counter_ui("counter")
       )
     } else {
       tagList(
@@ -172,58 +166,11 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  # output$main_ui <- renderUI({
-  #   if (!user_selection$selected) {
-  #     # LANDING PAGE VIEW
-  #     tagList(
-  #       tags$div(class = "flex gap-6 justify-center items-start mt-10 px-6",
-  #                
-  #                tags$div(class = "bg-white rounded-lg shadow p-6 w-1/4",
-  #                         filter_ui("filter_mod")
-  #                ),
-  #                
-  #                
-  #                tags$div(class = "bg-white rounded-lg shadow p-6 w-2/3 space-y-4",
-  #                         tags$h2(class = "text-2xl font-bold text-gray-800", "Welcome to speX"),
-  #                         tags$p(class = "text-gray-600", "Explore species data with maps and charts."),
-  #                         
-  #                         tags$div(class = "grid grid-cols-3 gap-4 mt-4",
-  #                                  tags$div(class = "bg-blue-100 text-blue-800 p-4 rounded-lg shadow",
-  #                                           tags$div(class = "text-xl font-bold", format(nrow(data), big.mark = ",")),
-  #                                           tags$div("Total Observations")
-  #                                  ),
-  #                                  tags$div(class = "bg-green-100 text-green-800 p-4 rounded-lg shadow",
-  #                                           tags$div(class = "text-xl font-bold", length(unique(data$scientificName))),
-  #                                           tags$div("Unique Species")
-  #                                  ),
-  #                                  tags$div(class = "bg-purple-100 text-purple-800 p-4 rounded-lg shadow",
-  #                                           tags$div(class = "text-xl font-bold", format(max(data$eventDate), "%Y-%m-%d")),
-  #                                           tags$div("Last Observed")
-  #                                  )
-  #                         ),
-  #                         
-  #                         tags$div(class = "mt-6",
-  #                                  tags$p(class = "text-gray-500 italic", "Choose a column and value on the left to get started.")
-  #                         )
-  #                )
-  #       )
-  #     )
-  #   } else {
-  #     # MAIN MAP + CHART UI
-  #     tagList(
-  #       tags$div(class = "flex h-full",
-  #                tags$div(class = "w-1/4 p-6",
-  #                         filter_ui("filter_mod"),
-  #                         DT::dataTableOutput("summary_table")
-  #                ),
-  #                map_ui("map_mod")
-  #       ),
-  #       tags$div(class="mt-10", timeline_ui("timeline_mod"))
-  #     )
-  #   }
-  # })
-  
+  # Call counterUp module using raw dataset for now
+  counter_server("counter",
+                 total = 2345,
+                 unique = 123,
+                 last = 14)
   
   # Call the map server module
   # Get filtered dataset from the module
