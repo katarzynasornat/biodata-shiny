@@ -15,40 +15,22 @@ source("modules/filter_module.R")
 source("modules/timeline_module1.R")
 source("modules/counterUp_module.R")
 
+source("modules/geolocation_module.R")
+source("utils/distance_helpers.R")
+source("utils/estimate_country.R")
+source("utils/get_data.R")
+
 ui <- fluidPage(
   # Tailwind CSS
-  tags$head(
-    tags$link(
-      rel = "stylesheet", 
-      href = "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    tags$head(
+      tags$link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"),
+      tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
+      tags$link(rel = "stylesheet", href = "styles.css"),
+      tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.8/countUp.umd.js"),
+      tags$script(src = "counterUpHandler.js"),
+      tags$script(src = "infoButtonHandler.js"),
+      tags$script(src = "geoLocationHandler.js")
     ),
-    tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
-    tags$link(rel = "stylesheet", href = "styles.css"),
-    tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.8/countUp.umd.js"),
-    tags$script(HTML("
-  Shiny.addCustomMessageHandler('startCounters', function(message) {
-    const opts = { duration: 1, separator: ',' };
-    const obs = new countUp.CountUp(message.ns + 'count-observations', message.total, opts);
-    const species = new countUp.CountUp(message.ns + 'count-species', message.unique, opts);
-    const last = new countUp.CountUp(message.ns + 'count-lastdate', message.last, opts);
-    
-    if (!obs.error) obs.start(); else console.error(obs.error);
-    if (!species.error) species.start(); else console.error(species.error);
-    if (!last.error) last.start(); else console.error(last.error);
-  });
-")),
-    tags$script(HTML("
-  document.addEventListener('DOMContentLoaded', function() {
-    var infoBtn = document.getElementById('info_btn');
-    if (infoBtn) {
-      infoBtn.addEventListener('click', function() {
-        Shiny.setInputValue('info_btn', Math.random());
-      });
-    }
-  });
-"))
-    
-  ),
   
   # Navbar
   tags$div(class = "flex items-center justify-between bg-gray-100 p-4 shadow",
@@ -67,9 +49,9 @@ ui <- fluidPage(
   tags$div(class = "p-6", uiOutput("main_ui")),
   
   # Footer
-  tags$div(class = "border-t border-gray-300 mb-2 pt-4 px-6 flex justify-between text-gray-500 text-m",
-           span(HTML("Created by <strong>SorKa</strong> with ❤️")),
-           span("2025")
+  tags$div(class = "border-t border-gray-300 mb-2 pt-4 px-6 flex justify-between text-gray-500 text-m mt-auto",
+           tags$span(HTML("Created by <strong>SorKa</strong> with ❤️")),
+           tags$span("2025")
   )
 )
 
@@ -132,36 +114,64 @@ server <- function(input, output, session) {
   # Main UI render logic
   
   output$main_ui <- renderUI({
+    if(current_tab() == "tab1"){
     tagList(
-      tags$div(class = "flex h-full",
+      tags$div(class = "flex h-3/5",
                
                # Sidebar (always visible)
-               tags$div(class = "w-1/4 p-6",
-                        filter_ui("filter_mod")
+               tags$div(class = "w-1/4 p-6 flex flex-col space-y-4 h-[600px]",
+                        
+                        # Fixed area for inputs
+                        tags$div(class = "space-y-4 h-[130px]",
+                                 filter_ui("filter_mod")
+                        ),
+                        
+                        tags$hr(),
+                        
+                        # Conditional Table Container
+                        tags$div(class = "flex-1 overflow-y-auto",
+                                 uiOutput("conditional_table")
+                        )
                ),
                
                # Main panel changes depending on selection
-               tags$div(class = "flex-1 p-6",
+               tags$div(class = "w-3/4 p-6",
                         uiOutput("dynamic_main_ui") 
                )
       ),
       
-      tags$div(class = "mt-10", timeline_ui("timeline_mod"))
-    )
+      tags$div(class = "mt-3 h=2/5", timeline_ui("timeline_mod"))
+    )} else{
+      h2(paste("This is", current_tab()))
+    }
   })
   
-
+  output$conditional_table <- renderUI({
+    req(input[["filter_mod-column_choice"]], input[["filter_mod-value_choice"]])
+    if (input[["filter_mod-column_choice"]] != "" && input[["filter_mod-value_choice"]] != "") {
+      DT::dataTableOutput("summary_table")
+    } else {
+      tags$div(class = "text-gray-500 italic", "Select a column and value to see results.")
+    }
+  })
+  
   
   output$dynamic_main_ui <- renderUI({
     if (!user_selection$selected) {
-      tags$div(class = "max-w-4xl mx-auto mt-10 px-6",
+      tags$div(
+        tags$div(class = "max-w-4xl mx-auto mt-10 px-6",
                tags$h1(class = "text-4xl font-bold text-center mb-6 text-gray-800", "speX Stats"),
                counter_ui("counter")
+        ),
+        tags$div(class = "bg-gray-200 p-4 rounded mt-10",
+                 h3("First Row - Right (2/3)"),
+                 verbatimTextOutput("user_location"),
+        )
       )
     } else {
       tagList(
-        map_ui("map_mod"),
-        DT::dataTableOutput("summary_table")
+        map_ui("map_mod")
+        #DT::dataTableOutput("summary_table")
       )
     }
   })
@@ -177,6 +187,22 @@ server <- function(input, output, session) {
   filter_result <- filter_server("filter_mod", data, unique_values_map)
   filtered_data <- filter_result$data
   selected_column <- filter_result$selected_column
+  
+  # output$user_location <- renderPrint({
+  #   req(input$user_location)
+  #   paste("Latitude:", input$user_location$lat,
+  #         "\nLongitude:", input$user_location$lon,
+  #         "\nCountry:", get_country_from_coords(input$user_location$lon, input$user_location$lat))
+  # })
+  # 
+  
+  output$user_location <- renderUI({
+    req(input$user_location)
+    paste("Latitude:", input$user_location$lat,
+          "\nLongitude:", input$user_location$lon,
+          "\nCountry:", get_country_from_coords(input$user_location$lon, input$user_location$lat))
+  })
+  
   
   # Reactively update selection status
   observeEvent(input$filter_mod_column_choice, {

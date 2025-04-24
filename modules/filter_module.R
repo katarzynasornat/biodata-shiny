@@ -1,51 +1,60 @@
-# ---- filter_module.R ----
+# modules/filter_module.R
 
 filter_ui <- function(id) {
   ns <- NS(id)
-  
   tagList(
-    selectInput(ns("column_choice"), "Choose Column:",
-                choices = c("", "scientificName", "vernacularName"), selected = "", selectize = TRUE),
-    
-    selectizeInput(ns("value_choice"), "Choose Value:",
-                   choices = NULL,
-                   selected = NULL,
-                   options = list(placeholder = 'Start typing...', maxOptions = 500))
+    tags$div(
+      class = "bg-blue-50 rounded-lg shadow-lg p-4 space-y-6 border border-blue-200",
+      selectInput(ns("column_choice"), "Column", choices = choices_columns ),
+      uiOutput(ns("value_choice"))
+    )
   )
 }
 
 filter_server <- function(id, data, unique_values_map) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
     
-    # Reactive for selected column
-    selected_column <- reactive({
-      req(input$column_choice)
-      input$column_choice
+    # Dynamic select for values based on chosen column
+    output$value_choice <- renderUI({
+      selectizeInput(
+        ns("value_choice"),
+        "Value",
+        choices = NULL,
+        options = list(placeholder = "Select a column first")
+      )
     })
     
-    # Dynamically update value choices when column changes
     observeEvent(input$column_choice, {
-      req(input$column_choice)
       updateSelectizeInput(
         session,
-        inputId = "value_choice",
+        "value_choice",
         choices = unique_values_map[[input$column_choice]],
-        selected = "",
-        server = TRUE  # Efficient for large data
+        server = TRUE
       )
     })
     
     # Reactive filtered data
     filtered_data <- reactive({
       req(input$column_choice, input$value_choice)
-      data %>%
-        filter(.data[[input$column_choice]] == input$value_choice)
+      #data %>% filter(.data[[input$column_choice]] == input$value_choice)
+      
+      result_azure <- get_dataset_for_duckdb(
+        scientificName_value = input$value_choice,
+        group_by_columns = c(input$column_choice, "eventDate", "latitudeDecimal", "longitudeDecimal")
+        # azure_container_url = azure_url,
+        # sas_token = sas_token
+      )
+      
+      result_azure$data
+      
     })
     
-    # Return both for downstream use
+    head(filtered_data)
+    
     return(list(
       data = filtered_data,
-      selected_column = selected_column
+      selected_column = reactive(input$column_choice)
     ))
   })
 }

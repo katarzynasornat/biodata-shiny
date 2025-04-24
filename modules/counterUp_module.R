@@ -48,7 +48,7 @@ counter_ui <- function(id) {
              tags$div(class = "bg-blue-100 p-6 rounded-lg shadow",
                       tags$div(class = "text-3xl font-bold text-blue-800",
                                tags$span(id = ns("count-observations"), "0")),
-                      tags$div(class = "text-blue-600 mt-1", "Total Observations")
+                      tags$div(class = "text-blue-600 mt-2", "Total Observations")
              ),
              tags$div(class = "bg-green-100 p-6 rounded-lg shadow",
                       tags$div(class = "text-3xl font-bold text-green-800",

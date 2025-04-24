@@ -64,7 +64,7 @@ timeline_server <- function(id, filtered_data) {
     output$chart_title_ui <- renderUI({
       req(filtered_data())
       tags$div(class = "chart-title-container",
-               span("Observations over"),
+               tags$span("Observations over"),
                div(class = "inline-dropdown",
                    selectInput(ns("granularity"), NULL,
                                choices = c("day", "month", "year"),

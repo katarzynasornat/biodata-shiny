@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 # Install R packages
-RUN R -e "install.packages(c('shiny', 'leaflet', 'dplyr', 'data.table', 'highcharter', 'lubridate', 'DT'), repos='https://cloud.r-project.org')"
+RUN R -e "install.packages(c('shiny', 'leaflet', 'dplyr', 'data.table', 'highcharter', 'lubridate', 'DT', 'glue', 'geosphere', 'httr', 'jsonlite', 'duckdb', 'DBI', 'shinyjs'), repos='https://cloud.r-project.org')"
 
 COPY . /home/app/
 WORKDIR /home/app
@@ -31,6 +31,6 @@ WORKDIR /home/app
 EXPOSE 8180
 
 # Run your app
-CMD ["Rscript", "app.R"]
+CMD ["Rscript", "app1.R"]
 
 

@@ -9,7 +9,8 @@
 .Renviron
 
 dropdownchart.R
-app1.R
 timeline_module.R
 data/multimedia.csv
 data/parquet_files/
+tmp_files/
+modules/tmp_modules/

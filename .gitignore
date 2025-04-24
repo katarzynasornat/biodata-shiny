@@ -13,11 +13,11 @@
 # Ignore data (optional if you don’t want large datasets committed)
 data/
 dropdownchart.R
-app1.R
 timeline_module.R
 data/multimedia.csv
 data/parquet_files/
 *.Rproj
+tmp_files/
 
 # Ignore Docker local files
 *.log
